@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.dev-registry/
+coverage/
+.DS_Store
