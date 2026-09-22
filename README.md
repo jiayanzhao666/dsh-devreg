@@ -1,92 +1,82 @@
----
-description: "Adds read-only devreg inspection tools to a DeepSeek Harness profile."
-kind: "package-bundle"
----
-
 # dsh-devreg
 
-English | [中文](README.zh.md)
+Read your local development services from DeepSeek Harness.
 
-## Summary
+[中文说明](README.zh.md) · [GitHub](https://github.com/jiayanzhao666/dsh-devreg)
 
-Add read-only devreg inspection to a DeepSeek Harness profile. This is a standalone project; it does not require a separate devreg CLI installation. The bundle exposes registered services, port conflicts, and registry health through model-visible tools. It reads the existing `~/.dev-registry/projects/*.json` files and never modifies them.
+`dsh-devreg` is a standalone, read-only DeepSeek Harness plugin package. It shows the services, ports, statuses, and environment URLs recorded in `~/.dev-registry/projects/*.json`. It does not require a separate CLI installation and never changes the registry.
 
-## Table of Contents
+## Features
 
-- [Use this package](#use-this-package)
-- [Understand the implementation](#understand-the-implementation)
-- [Further Exploration](#further-exploration)
-- [Model Experience](#model-experience)
-- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- Inspect registered services from a Harness session.
+- Find multiple services claiming the same port.
+- Check whether the registry files are readable.
+- Use the same data from the `devreg` command-line entry point.
 
------
+## Quick start
 
-<a id="use-this-package"></a>
-## Use this package
-
-### Install into a profile
-
-From a local checkout:
+Clone and build the project:
 
 ```sh
+git clone https://github.com/jiayanzhao666/dsh-devreg.git
+cd dsh-devreg
 npm install
 npm run build
+```
+
+Add the checkout to a Harness profile:
+
+```sh
 dsh plugin --profile devreg add link:/absolute/path/to/dsh-devreg
 ```
 
-Remove it with:
+Remove it later with:
 
 ```sh
 dsh plugin --profile devreg remove dsh-devreg
 ```
 
-The package declares `cordis.patch.yml`, so `dsh plugin` activates its bundle layer in the profile. Restart the profile after installation.
+The profile gets these tools:
 
-### What you get
+| Tool | What it does | Input |
+| --- | --- | --- |
+| `devreg_status` | Lists registered services. | Optional `project` filter. |
+| `devreg_conflicts` | Finds duplicate port claims. | None. |
+| `devreg_doctor` | Checks that registry files can be read. | None. |
 
-- `devreg_status` lists registered services and accepts an optional project filter.
-- `devreg_conflicts` lists services that claim the same port.
-- `devreg_doctor` checks that the registry project files can be read.
+## CLI
 
-The command-line entry point also provides `ports`, `show`, `conflicts`, `doctor`, and JSON `export` commands.
+Run the local CLI through npm:
 
------
+```sh
+npm run devreg -- ports
+npm run devreg -- conflicts
+npm run devreg -- doctor
+npm run devreg -- export
+```
 
-<a id="understand-the-implementation"></a>
-## Understand the implementation
+The CLI is read-only as well. If no project files exist, list commands return an empty result.
 
-<details>
-<summary>Implementation internals — click to expand</summary>
+## Data source
 
-`cordis.patch.yml` inserts the package into the profile. `src/plugin.ts` registers the three tools through `ctx.tools`. The plugin uses the read-only path in `src/core/registry.ts` to read and normalize `~/.dev-registry/projects/*.json`; it does not spawn another process or modify registry files.
+The plugin reads project files under:
 
-</details>
+```text
+~/.dev-registry/projects/*.json
+```
 
------
+It reads service names, ports, status, commands, container metadata, project paths, and configured environment URLs when those fields exist. It does not start another process, synchronize Docker state, run `devreg serve`, or write `index.json`.
 
-<a id="further-exploration"></a>
-## Further Exploration
+## Development
 
-- [DeepSeek Harness plugin documentation](https://github.com/deepseek-harness/deepseek-harness/tree/main/docs/user/develop/basic)
-- [Source repository](https://github.com/jiayanzhao666/dsh-devreg)
+```sh
+npm install
+npm run typecheck
+npm test
+npm run build
+```
 
------
-
-<a id="model-experience"></a>
-## Model Experience
-
-The model can inspect local development services without changing registry state. Tool results are JSON values that include project and service names, ports, status, paths, container metadata, and configured environment URLs when those fields exist.
-
-<a id="known-limitations-and-deferred-work"></a>
-## Known Limitations and Deferred Work
-
-- The current release is read-only.
-- It reads project files but does not synchronize Docker state or run `devreg serve`.
-- It depends on the existing devreg project-file format under `~/.dev-registry/projects`.
-
-### Dev Note
-
-No deferred implementation is part of the current release.
+Node.js 22 or newer is required.
 
 ## License
 

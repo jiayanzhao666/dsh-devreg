@@ -1,92 +1,82 @@
----
-description: "为 DeepSeek Harness profile 提供只读的 devreg 检查工具。"
-kind: "package-bundle"
----
-
 # dsh-devreg
 
-[English](README.md) | 中文
+让 DeepSeek Harness 直接查看本机开发服务。
 
-## 摘要
+[English](README.md) · [GitHub](https://github.com/jiayanzhao666/dsh-devreg)
 
-为 DeepSeek Harness profile 增加只读的 devreg 检查能力。这是一个独立项目，不要求另外安装 devreg CLI。这个组合包通过模型可见工具展示已登记服务、端口冲突和注册表健康状态。它读取现有的 `~/.dev-registry/projects/*.json` 文件，不修改注册表。
+`dsh-devreg` 是一个独立、只读的 DeepSeek Harness 插件。它展示 `~/.dev-registry/projects/*.json` 中记录的服务、端口、状态和环境 URL。不要求另外安装 CLI，也不会修改注册表。
 
-## 目录
+## 功能
 
-- [使用这个包](#使用这个包)
-- [实现方式](#实现方式)
-- [进一步了解](#进一步了解)
-- [模型体验](#模型体验)
-- [已知限制和后续工作](#已知限制和后续工作)
+- 在 Harness 会话中查看已登记的开发服务。
+- 查找多个服务同时声明同一端口的情况。
+- 检查注册表文件是否可以读取。
+- 通过 `devreg` 命令行入口读取相同的数据。
 
------
+## 快速开始
 
-<a id="使用这个包"></a>
-## 使用这个包
-
-### 安装到 profile
-
-在本地 checkout 中执行：
+克隆并构建项目：
 
 ```sh
+git clone https://github.com/jiayanzhao666/dsh-devreg.git
+cd dsh-devreg
 npm install
 npm run build
+```
+
+把本地 checkout 加入 Harness profile：
+
+```sh
 dsh plugin --profile devreg add link:/absolute/path/to/dsh-devreg
 ```
 
-移除：
+之后可以这样移除：
 
 ```sh
 dsh plugin --profile devreg remove dsh-devreg
 ```
 
-这个包声明了 `cordis.patch.yml`，因此 `dsh plugin` 会把它的组合层激活到 profile 中。安装后重启 profile。
+profile 会获得以下工具：
 
-### 提供的能力
+| 工具 | 作用 | 输入 |
+| --- | --- | --- |
+| `devreg_status` | 列出已登记的服务。 | 可选的 `project` 筛选条件。 |
+| `devreg_conflicts` | 查找重复的端口声明。 | 无。 |
+| `devreg_doctor` | 检查注册表文件是否可以读取。 | 无。 |
 
-- `devreg_status` 列出已登记服务，可按项目筛选。
-- `devreg_conflicts` 列出声明了同一端口的服务。
-- `devreg_doctor` 检查注册表项目文件是否可以读取。
+## 命令行
 
-命令行入口还提供 `ports`、`show`、`conflicts`、`doctor` 和 JSON `export` 命令。
+通过 npm 运行本地 CLI：
 
------
+```sh
+npm run devreg -- ports
+npm run devreg -- conflicts
+npm run devreg -- doctor
+npm run devreg -- export
+```
 
-<a id="实现方式"></a>
-## 实现方式
+CLI 同样是只读的。如果没有项目文件，列表命令会返回空结果。
 
-<details>
-<summary>实现细节——点击展开</summary>
+## 数据来源
 
-`cordis.patch.yml` 将这个包插入 profile。`src/plugin.ts` 通过 `ctx.tools` 注册三个工具。插件使用 `src/core/registry.ts` 的只读路径读取并规范化 `~/.dev-registry/projects/*.json`；它不会启动其他进程，也不会修改注册表文件。
+插件读取以下目录中的项目文件：
 
-</details>
+```text
+~/.dev-registry/projects/*.json
+```
 
------
+在字段存在时，它会读取服务名、端口、状态、命令、容器信息、项目路径和环境 URL。它不会启动其他进程、同步 Docker 状态、运行 `devreg serve`，也不会写入 `index.json`。
 
-<a id="进一步了解"></a>
-## 进一步了解
+## 开发
 
-- [DeepSeek Harness 插件文档](https://github.com/deepseek-harness/deepseek-harness/tree/main/docs/user/develop/basic)
-- [源代码仓库](https://github.com/jiayanzhao666/dsh-devreg)
+```sh
+npm install
+npm run typecheck
+npm test
+npm run build
+```
 
------
-
-<a id="模型体验"></a>
-## 模型体验
-
-模型可以检查本地开发服务，但不能通过这些工具修改注册表。工具返回 JSON，其中会在字段存在时包含项目名、服务名、端口、状态、路径、容器信息和环境 URL。
-
-<a id="已知限制和后续工作"></a>
-## 已知限制和后续工作
-
-- 当前版本只读。
-- 当前版本读取项目文件，但不会同步 Docker 状态，也不会运行 `devreg serve`。
-- 当前版本依赖 `~/.dev-registry/projects` 下已有的 devreg 项目文件格式。
-
-### 开发备注
-
-当前版本没有延期实现项。
+要求 Node.js 22 或更高版本。
 
 ## 许可证
 
