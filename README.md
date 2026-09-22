@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Add read-only devreg inspection to a DeepSeek Harness profile. The bundle exposes registered services, port conflicts, and registry health through model-visible tools. It reads the existing `~/.dev-registry/projects/*.json` files and never modifies them.
+Add read-only devreg inspection to a DeepSeek Harness profile. This is a standalone project; it does not require a separate devreg CLI installation. The bundle exposes registered services, port conflicts, and registry health through model-visible tools. It reads the existing `~/.dev-registry/projects/*.json` files and never modifies them.
 
 ## Table of Contents
 
@@ -58,7 +58,7 @@ The command-line entry point also provides `ports`, `show`, `conflicts`, `doctor
 <details>
 <summary>Implementation internals — click to expand</summary>
 
-`cordis.patch.yml` inserts the package into the profile. `src/plugin.ts` registers the three tools through `ctx.tools`. `src/core/registry.ts` reads and normalizes `~/.dev-registry/projects/*.json`; it does not invoke the Python `devreg` process, acquire its locks, or write `index.json`.
+`cordis.patch.yml` inserts the package into the profile. `src/plugin.ts` registers the three tools through `ctx.tools`. The plugin uses the read-only path in `src/core/registry.ts` to read and normalize `~/.dev-registry/projects/*.json`; it does not spawn another process or modify registry files.
 
 </details>
 

@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 摘要
 
-为 DeepSeek Harness profile 增加只读的 devreg 检查能力。这个组合包通过模型可见工具展示已登记服务、端口冲突和注册表健康状态。它读取现有的 `~/.dev-registry/projects/*.json` 文件，不修改注册表。
+为 DeepSeek Harness profile 增加只读的 devreg 检查能力。这是一个独立项目，不要求另外安装 devreg CLI。这个组合包通过模型可见工具展示已登记服务、端口冲突和注册表健康状态。它读取现有的 `~/.dev-registry/projects/*.json` 文件，不修改注册表。
 
 ## 目录
 
@@ -58,7 +58,7 @@ dsh plugin --profile devreg remove dsh-devreg
 <details>
 <summary>实现细节——点击展开</summary>
 
-`cordis.patch.yml` 将这个包插入 profile。`src/plugin.ts` 通过 `ctx.tools` 注册三个工具。`src/core/registry.ts` 读取并规范化 `~/.dev-registry/projects/*.json`；它不会启动 Python 版 `devreg`，不会获取其文件锁，也不会写入 `index.json`。
+`cordis.patch.yml` 将这个包插入 profile。`src/plugin.ts` 通过 `ctx.tools` 注册三个工具。插件使用 `src/core/registry.ts` 的只读路径读取并规范化 `~/.dev-registry/projects/*.json`；它不会启动其他进程，也不会修改注册表文件。
 
 </details>
 
